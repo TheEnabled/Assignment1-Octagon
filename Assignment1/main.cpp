@@ -1,25 +1,8 @@
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <cmath> 
 
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
-void drawOctagon(float radius) {
-    const int sides = 8;
-    const float angleStep = 2.0f * M_PI / sides; 
-    const float offset = M_PI / 8.0f;
-
-    glBegin(GL_POLYGON);
-    for (int i = 0; i < sides; i++) {
-        float angle = i * angleStep - offset; 
-        float x = radius * cos(angle);
-        float y = radius * sin(angle) + 0.55;
-        glVertex2f(x, y);
-    }
-    glEnd();
-}
 
 int main(void) {
     GLFWwindow* window;
@@ -37,24 +20,52 @@ int main(void) {
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+    gladLoadGL();
 
-    /* Set the viewport to match the window size */
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
-    glViewport(0, 0, width, height);
+    GLfloat vertices[]{
+        0.f,    0.5f,   0.f
+        -0.5f,  0.f,    0.f,
+        0.5f,   0.f,    0.f
+    };
 
-    /* Adjust projection to normalized device coordinates */
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        sizeof(vertices),
+        vertices,
+        GL_STATIC_DRAW
+        //GL_DYNAMIC_DRAW if needs to move.
+        );
+
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        3 * sizeof(GLfloat),
+        (void*)0
+    );
+
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window)) {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        
-        drawOctagon(0.5f);
+        glBindVertexArray(VAO);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -62,6 +73,9 @@ int main(void) {
         /* Poll for and process events */
         glfwPollEvents();
     }
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 
     glfwTerminate();
     return 0;
